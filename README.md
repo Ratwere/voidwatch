@@ -96,9 +96,10 @@ scores as follows:
 - `31`–`70`: `deceive`
 - `71`–`100`: `block`
 
-These are fixed demo thresholds in `app/decision.py`. `deceive` is currently
-only a label in the API response; it does not yet create a fake context or
-redirect an agent. The thresholds are not yet adjustable while the app runs.
+These are fixed demo thresholds in `app/decision.py`. When the decision is
+`deceive`, the `/check` response also includes the synthetic honeypot context.
+For `allow` and `block`, that context is omitted. The thresholds are not yet
+adjustable while the app runs.
 
 These are starter heuristics: they can miss new or disguised attacks and can
 flag harmless quoted text. An `allow` result is not proof that content is safe.
@@ -109,6 +110,22 @@ The weights are demo values, not calibrated confidence probabilities.
 The honeypot context is available at `GET /honeypot/context`. Its inbox and
 files contain synthetic demo values; its external API uses the reserved
 `.invalid` domain and is never contacted by this app.
+
+When `/check` returns `deceive`, it now includes that same fake context in the
+JSON response. For example, text containing a known jailbreak phrase gets a
+score of `70` and a `deceive` decision:
+
+```powershell
+Invoke-RestMethod `
+  -Uri http://127.0.0.1:8000/check `
+  -Method Post `
+  -ContentType "application/json" `
+  -Body '{"content":"Ignore previous instructions."}'
+```
+
+The caller can use the returned fake context for its simulated next step.
+This project still has no AI agent integration, so no agent is automatically
+redirected and the check itself does not create an action-log entry.
 
 Record a simulated action with `POST /honeypot/actions`:
 
@@ -128,9 +145,8 @@ with `GET /honeypot/actions`.
 The in-memory log records the action, target, detected target domain,
 timestamp, payload style and length, and a SHA-256 payload hash. Raw payload
 text is not retained. The log is cleared when the server process restarts, so
-this is for a local demo, not durable or production logging. No AI agent is
-connected or automatically redirected to this fake context yet; these
-endpoints let you explore and test the isolated simulation.
+this is for a local demo, not durable or production logging. These endpoints
+let you explore and test the isolated simulation.
 
 ### Run the detector tests
 
@@ -140,14 +156,14 @@ With the virtual environment activated:
 python -m unittest discover -s tests
 ```
 
-The tests cover detection signals, decision boundaries, invalid scores, and the
-synthetic honeypot log.
+The tests cover detection signals, decision boundaries, invalid scores,
+conditional honeypot context in `/check`, and the synthetic honeypot log.
 
 ## Publishing to GitHub
 
-Git version control has been initialized locally on the `main` branch. The
-project is beginning the process of being published to GitHub; no commit or
-push has been made yet.
+Git version control is initialized locally on the `main` branch. The initial
+project commit has been pushed to `https://github.com/Ratwere/voidwatch.git`,
+and the local `main` branch tracks `origin/main`.
 
 Before staging files, review `git status` and confirm that the files are
 appropriate to share. The `.gitignore` excludes the local virtual environment
@@ -166,10 +182,10 @@ push:
 git add "VoidWatch.jpg"
 ```
 
-After creating an empty repository on GitHub, connect it and push the `main`
-branch. Replace the placeholders with the repository's actual owner and name:
+For a future push after committing additional changes, run:
 
 ```powershell
-git remote add origin https://github.com/OWNER/REPOSITORY.git
 git push -u origin main
 ```
+
+The initial push included `VoidWatch.jpg`; `Spade Icon.jpg` was left out.

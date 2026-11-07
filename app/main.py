@@ -22,6 +22,7 @@ class CheckResponse(BaseModel):
     score: int
     action: Action
     reason: str
+    honeypot_context: dict[str, object] | None = None
 
 
 class HoneypotActionRequest(BaseModel):
@@ -35,13 +36,15 @@ def health_check() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.post("/check", response_model=CheckResponse)
+@app.post("/check", response_model=CheckResponse, response_model_exclude_none=True)
 def check_content(request: CheckRequest) -> CheckResponse:
     result = detect_untrusted_content(request.content)
+    action = decide_action(result.score)
     return CheckResponse(
         score=result.score,
-        action=decide_action(result.score),
+        action=action,
         reason=result.reason,
+        honeypot_context=get_honeypot_context() if action == "deceive" else None,
     )
 
 
