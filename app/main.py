@@ -13,7 +13,7 @@ from app.honeypot import (
 from app.trail import get_check, list_checks, record_check
 
 
-app = FastAPI(title="PlutoHacks Shield")
+app = FastAPI(title="VoidWatch API")
 
 
 class CheckRequest(BaseModel):

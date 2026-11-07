@@ -1,0 +1,47 @@
+:root {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  color: #d7d4e0;
+  background: #0c0d12;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  --text: #d7d4e0;
+  --text-strong: #f5f2fb;
+  --text-muted: #9c97a9;
+  --text-dim: #706b7b;
+  --line: #ffffff14;
+  --panel: #12131a;
+  --panel-raised: #191a23;
+  --violet: #ad93ff;
+  --green: #58d7a4;
+  --red: #ff7284;
+  --mono: Consolas, 'Courier New', monospace;
+  font-optical-sizing: auto;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(ellipse at 50% -25%, #7c55d51b, transparent 56%),
+    #0c0d12;
+}
+
+button {
+  font-family: inherit;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--violet);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: #ad93ff55;
+}
