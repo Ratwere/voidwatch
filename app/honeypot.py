@@ -35,6 +35,7 @@ _HONEYPOT_CONTEXT: dict[str, object] = {
 class HoneypotEvent:
     event_id: str
     timestamp: str
+    check_id: str | None
     action: HoneypotAction
     target: str
     target_domain: str | None
@@ -80,11 +81,13 @@ def record_honeypot_action(
     action: HoneypotAction,
     target: str,
     payload: str,
+    check_id: str | None = None,
 ) -> HoneypotEvent:
     payload_style, payload_sha256 = _payload_details(payload)
     event = HoneypotEvent(
         event_id=str(uuid4()),
         timestamp=datetime.now(timezone.utc).isoformat(),
+        check_id=check_id,
         action=action,
         target=target,
         target_domain=_extract_target_domain(target),
@@ -100,3 +103,12 @@ def record_honeypot_action(
 def list_honeypot_events() -> list[dict[str, object]]:
     with _events_lock:
         return [asdict(event) for event in _events]
+
+
+def list_honeypot_events_for_check(check_id: str) -> list[dict[str, object]]:
+    with _events_lock:
+        return [
+            asdict(event)
+            for event in _events
+            if event.check_id == check_id
+        ]

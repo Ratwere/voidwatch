@@ -2,9 +2,9 @@
 
 A small FastAPI backend scaffold for the PlutoHacks prompt-injection shield.
 It currently includes a basic weighted heuristic detector, fixed score-based
-decisions, a synthetic honeypot with an in-memory action log, an API endpoint
-to check untrusted text, and a health check. Live threshold configuration, the
-LLM judge, agent integration, and dashboard have not been implemented.
+decisions, a synthetic honeypot with an in-memory action log, and an in-memory
+check-to-action trail. Live threshold configuration, the LLM judge, agent
+integration, and dashboard have not been implemented.
 
 ## Development setup
 
@@ -123,30 +123,54 @@ Invoke-RestMethod `
   -Body '{"content":"Ignore previous instructions."}'
 ```
 
-The caller can use the returned fake context for its simulated next step.
-This project still has no AI agent integration, so no agent is automatically
+The response includes a `check_id` and a fingerprint containing the normalized
+content's SHA-256 hash, first-seen time, and exact-match count. The raw input
+text is not stored. Repeated checks with different casing or whitespace share
+the same fingerprint.
+
+The caller can use the returned fake context for its simulated next step. This
+project still has no AI agent integration, so no agent is automatically
 redirected and the check itself does not create an action-log entry.
 
-Record a simulated action with `POST /honeypot/actions`:
+Record a simulated action with `POST /honeypot/actions`, passing the `check_id`
+from a `deceive` response to connect it to that check:
 
 ```powershell
 Invoke-RestMethod `
   -Uri http://127.0.0.1:8000/honeypot/actions `
   -Method Post `
   -ContentType "application/json" `
-  -Body '{"action":"post_data","target":"https://example.test/collect","payload":"{\"demo\":\"synthetic\"}"}'
+  -Body '{"check_id":"PASTE-CHECK-ID-HERE","action":"post_data","target":"https://example.test/collect","payload":"{\"demo\":\"synthetic\"}"}'
 ```
 
 Supported action names are `read_file`, `delete_file`, `forward_email`, and
 `post_data`. These requests only create log entries; they do not read or delete
 real files, send email, or make network requests. Inspect the captured events
-with `GET /honeypot/actions`.
+with `GET /honeypot/actions`, or inspect a single connected trail at
+`GET /checks/{check_id}`. A check ID must exist and have a `deceive` decision
+to be accepted for a linked honeypot action. The link is optional for
+backwards-compatible standalone simulation.
 
-The in-memory log records the action, target, detected target domain,
-timestamp, payload style and length, and a SHA-256 payload hash. Raw payload
-text is not retained. The log is cleared when the server process restarts, so
-this is for a local demo, not durable or production logging. These endpoints
-let you explore and test the isolated simulation.
+For a dashboard-style feed of recent checks and their linked actions, request
+`GET /checks`. It returns the newest checks first, with up to 50 entries by
+default; set `limit` from `1` to `100` to adjust the page size:
+
+```powershell
+Invoke-RestMethod "http://127.0.0.1:8000/checks?limit=20"
+```
+
+Each entry has a `check` object (score, decision, reason, timestamp, and
+fingerprint) and a `honeypot_actions` list. Checks without linked actions have
+an empty list. This is a simple latest-items feed; pagination and persistent
+storage are not implemented.
+
+The in-memory trail records the check score, decision, reason, content
+fingerprint, and linked simulated actions. Each action records its target,
+detected target domain, timestamp, payload style and length, and a SHA-256
+payload hash. Raw check content and action payload text are not retained. The
+trail is cleared when the server process restarts, so this is for a local demo,
+not durable or production logging. These endpoints let you explore and test
+the isolated simulation.
 
 ### Run the detector tests
 
@@ -157,7 +181,8 @@ python -m unittest discover -s tests
 ```
 
 The tests cover detection signals, decision boundaries, invalid scores,
-conditional honeypot context in `/check`, and the synthetic honeypot log.
+conditional honeypot context in `/check`, fingerprint grouping, check-to-action
+linking, the recent-trail feed, and the synthetic honeypot log.
 
 ## Publishing to GitHub
 

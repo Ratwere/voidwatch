@@ -45,6 +45,16 @@ class HoneypotTests(unittest.TestCase):
 
         self.assertEqual(event.target_domain, "external.test")
 
+    def test_action_can_be_linked_to_a_check(self) -> None:
+        event = record_honeypot_action(
+            action="read_file",
+            target="fake_passwords.txt",
+            payload="",
+            check_id="check-123",
+        )
+
+        self.assertEqual(event.check_id, "check-123")
+
 
 if __name__ == "__main__":
     unittest.main()
