@@ -20,8 +20,10 @@ class CheckEvent:
     check_id: str
     timestamp: str
     score: int
+    heuristic_score: int
     action: "Action"
     reason: str
+    judge: dict[str, object] | None
     content_sha256: str
     first_seen: str
     times_seen: int
@@ -35,8 +37,10 @@ _trail_lock = Lock()
 def record_check(
     content: str,
     score: int,
+    heuristic_score: int,
     action: "Action",
     reason: str,
+    judge: dict[str, object] | None,
 ) -> CheckEvent:
     normalized_content = " ".join(content.casefold().split())
     content_sha256 = hashlib.sha256(normalized_content.encode("utf-8")).hexdigest()
@@ -53,8 +57,10 @@ def record_check(
             check_id=str(uuid4()),
             timestamp=timestamp,
             score=score,
+            heuristic_score=heuristic_score,
             action=action,
             reason=reason,
+            judge=judge,
             content_sha256=content_sha256,
             first_seen=fingerprint.first_seen,
             times_seen=fingerprint.times_seen,

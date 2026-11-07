@@ -7,8 +7,14 @@ type Check = {
   check_id: string
   timestamp: string
   score: number
+  heuristic_score: number
   action: Decision
   reason: string
+  judge: {
+    injection_score: number
+    technique: string
+    reasoning: string
+  } | null
   content_sha256: string
   first_seen: string
   times_seen: number
@@ -217,6 +223,13 @@ function StatCard({
 
 function TrailCard({ trail }: { trail: CheckTrail }) {
   const { check, honeypot_actions: actions } = trail
+  const observedDomains = [
+    ...new Set(
+      actions
+        .map(({ target_domain }) => target_domain)
+        .filter((domain): domain is string => domain !== null),
+    ),
+  ]
 
   return (
     <article className="trail-card">
@@ -227,13 +240,52 @@ function TrailCard({ trail }: { trail: CheckTrail }) {
           <span className="trail-id">ID {check.check_id.slice(0, 8)}</span>
         </div>
         <p className="trail-reason">{check.reason}</p>
-        <div className="fingerprint-row">
-          <span>FINGERPRINT</span>
-          <code title={check.content_sha256}>{check.content_sha256.slice(0, 24)}…</code>
-          <span className="repeat-count">seen {check.times_seen}×</span>
-        </div>
-        {actions.length > 0 ? (
-          <div className="action-list">
+        <section className="indicators-panel" aria-label="Fingerprint and observed indicators">
+          <div className="indicators-heading">
+            <h3>Fingerprint &amp; observed indicators</h3>
+            <span>Indicators are not attacker identity</span>
+          </div>
+          <div className="fingerprint-details">
+            <div className="fingerprint-hash">
+              <span>CONTENT FINGERPRINT · SHA-256</span>
+              <code title={check.content_sha256}>{check.content_sha256}</code>
+            </div>
+            <div className="fingerprint-meta">
+              <div>
+                <span>FIRST SEEN</span>
+                <strong>{formatTime(check.first_seen)}</strong>
+              </div>
+              <div>
+                <span>EXACT MATCHES</span>
+                <strong>{check.times_seen}</strong>
+              </div>
+            </div>
+          </div>
+          <div className="observed-indicators">
+            <div className="indicator-line">
+              <span>Judge technique</span>
+              {check.judge ? (
+                <span className="indicator-value">{check.judge.technique.replaceAll('_', ' ')}</span>
+              ) : (
+                <span className="indicator-muted">No judge technique reported</span>
+              )}
+            </div>
+            <div className="indicator-line">
+              <span>Destination domains</span>
+              {observedDomains.length > 0 ? (
+                <div className="indicator-tags">
+                  {observedDomains.map((domain) => (
+                    <span className="indicator-tag" key={domain}>{domain}</span>
+                  ))}
+                </div>
+              ) : (
+                <span className="indicator-muted">None observed in linked simulated actions</span>
+              )}
+            </div>
+          </div>
+        </section>
+        {actions.length > 0 && (
+          <div className="action-list" aria-label="Linked simulated actions">
             {actions.map((action) => (
               <div className="action-row" key={action.event_id}>
                 <span className="action-icon" aria-hidden="true">↳</span>
@@ -245,8 +297,6 @@ function TrailCard({ trail }: { trail: CheckTrail }) {
               </div>
             ))}
           </div>
-        ) : (
-          <p className="no-action">No linked honeypot action recorded</p>
         )}
       </div>
       <div className="score-column">

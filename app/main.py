@@ -10,6 +10,7 @@ from app.honeypot import (
     list_honeypot_events_for_check,
     record_honeypot_action,
 )
+from app.judge import JudgeError, JudgeResult, judge_untrusted_content, should_use_judge
 from app.trail import get_check, list_checks, record_check
 
 
@@ -23,9 +24,11 @@ class CheckRequest(BaseModel):
 class CheckResponse(BaseModel):
     check_id: str
     score: int
+    heuristic_score: int
     action: Action
     reason: str
     fingerprint: dict[str, str | int]
+    judge: JudgeResult | None = None
     honeypot_context: dict[str, object] | None = None
 
 
@@ -44,23 +47,39 @@ def health_check() -> dict[str, str]:
 @app.post("/check", response_model=CheckResponse, response_model_exclude_none=True)
 def check_content(request: CheckRequest) -> CheckResponse:
     result = detect_untrusted_content(request.content)
-    action = decide_action(result.score)
+    judge_result: JudgeResult | None = None
+    score = result.score
+    if should_use_judge(result.score):
+        try:
+            judge_result = judge_untrusted_content(request.content)
+        except JudgeError as error:
+            raise HTTPException(status_code=503, detail=str(error)) from error
+        score = max(result.score, judge_result.injection_score)
+
+    action = decide_action(score)
+    reason = result.reason
+    if judge_result is not None:
+        reason = f"{reason} LLM judge: {judge_result.reasoning}"
     event = record_check(
         content=request.content,
-        score=result.score,
+        score=score,
+        heuristic_score=result.score,
         action=action,
-        reason=result.reason,
+        reason=reason,
+        judge=judge_result.model_dump(mode="json") if judge_result else None,
     )
     return CheckResponse(
         check_id=event.check_id,
-        score=result.score,
+        score=score,
+        heuristic_score=result.score,
         action=action,
-        reason=result.reason,
+        reason=reason,
         fingerprint={
             "content_sha256": event.content_sha256,
             "first_seen": event.first_seen,
             "times_seen": event.times_seen,
         },
+        judge=judge_result,
         honeypot_context=get_honeypot_context() if action == "deceive" else None,
     )
 
