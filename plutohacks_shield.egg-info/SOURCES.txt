@@ -1,0 +1,9 @@
+README.md
+pyproject.toml
+app/__init__.py
+app/main.py
+plutohacks_shield.egg-info/PKG-INFO
+plutohacks_shield.egg-info/SOURCES.txt
+plutohacks_shield.egg-info/dependency_links.txt
+plutohacks_shield.egg-info/requires.txt
+plutohacks_shield.egg-info/top_level.txt
