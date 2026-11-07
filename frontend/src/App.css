@@ -23,14 +23,10 @@
 }
 
 .brand-mark {
-  display: grid;
-  place-items: center;
   width: 30px;
   height: 30px;
-  border: 1px solid var(--violet);
   border-radius: 9px;
-  color: var(--violet);
-  font-size: 17px;
+  object-fit: cover;
 }
 
 .brand-accent {

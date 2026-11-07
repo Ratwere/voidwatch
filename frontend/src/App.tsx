@@ -123,7 +123,7 @@ function App() {
     <main className="app-shell">
       <header className="topbar">
         <a className="brand" href="/" aria-label="VoidWatch home">
-          <span className="brand-mark" aria-hidden="true">V</span>
+          <img className="brand-mark" src="/voidwatch.jpg" alt="" />
           <span>VOID<span className="brand-accent">WATCH</span></span>
         </a>
         <div className="topbar-status">

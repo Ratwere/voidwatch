@@ -72,6 +72,7 @@ server at `http://127.0.0.1:8000`. The dashboard polls `GET /checks?limit=50`
 every five seconds and can also be refreshed manually. It displays the latest
 check decisions, scores, fingerprints, and linked simulated actions; it does
 not submit checks or perform honeypot actions itself.
+The VoidWatch logo image is used in the dashboard header and browser tab icon.
 
 To see an entry, send a sample check from another PowerShell terminal:
 
