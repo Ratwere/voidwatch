@@ -222,8 +222,8 @@ linking, the recent-trail feed, and the synthetic honeypot log.
 
 Git version control is initialized locally on the `main` branch. The project
 is hosted at `https://github.com/Ratwere/voidwatch.git`, and the local `main`
-branch tracks `origin/main`. The latest documented push included the recent attack-trail feed. Changes to
-the React dashboard have not been committed or pushed yet.
+branch tracks `origin/main`. The React dashboard was pushed in commit
+`1d355c0` (`Add React security dashboard`).
 
 Before staging files, review `git status` and confirm that the files are
 appropriate to share. The `.gitignore` excludes the local virtual environment
