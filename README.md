@@ -161,31 +161,23 @@ conditional honeypot context in `/check`, and the synthetic honeypot log.
 
 ## Publishing to GitHub
 
-Git version control is initialized locally on the `main` branch. The initial
-project commit has been pushed to `https://github.com/Ratwere/voidwatch.git`,
-and the local `main` branch tracks `origin/main`.
+Git version control is initialized locally on the `main` branch. The project
+is hosted at `https://github.com/Ratwere/voidwatch.git`, and the local `main`
+branch tracks `origin/main`. The latest documented push included commit
+`8f3449b` (`Include honeypot context for deceive decisions`).
 
 Before staging files, review `git status` and confirm that the files are
 appropriate to share. The `.gitignore` excludes the local virtual environment
-and generated Python files. Stage and commit the project from PowerShell:
+and generated Python files. To publish future changes, stage the files you
+intend to share, commit them, then push from PowerShell:
 
 ```powershell
 git status
-git add .gitignore README.md app tests pyproject.toml
-git commit -m "Initial PlutoHacks shield prototype"
+git add README.md app tests pyproject.toml
+git status --short
+git commit -m "Describe your changes"
+git push
 ```
 
-Include the VoidWatch image, but leave `Spade Icon.jpg` out of this initial
-push:
-
-```powershell
-git add "VoidWatch.jpg"
-```
-
-For a future push after committing additional changes, run:
-
-```powershell
-git push -u origin main
-```
-
-The initial push included `VoidWatch.jpg`; `Spade Icon.jpg` was left out.
+The initial push included `VoidWatch.jpg`; `Spade Icon.jpg` remains untracked
+and is not part of the repository.
